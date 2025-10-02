@@ -19,38 +19,47 @@ body {
     margin: 0;
     padding: 20px;
     min-height: 100vh;
+    padding-bottom: 120px; /* Tạo khoảng trống cho footer */
+    box-sizing: border-box;
 }
 
 /* Header chính */
 #main-header {
-    width: 100%;
-    max-width: 1000px; /* Điều chỉnh độ rộng của header */
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Giữ tiêu đề chính giữa */
-    flex-wrap: wrap; /* Cho phép xuống dòng trên màn hình nhỏ */
+    width: 100%; /* Cho header rộng toàn màn hình */
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid var(--secondary-color);
+    position: relative; /* Làm gốc để định vị logo */
+    height: 60px; /* Thêm chiều cao cố định để các phần tử căn dọc */
+    display: flex; /* Thêm để căn dọc */
+    align-items: center; /* Thêm để căn dọc */
 }
 
+/* Khung bọc tiêu đề để căn giữa */
+.header-title-wrapper {
+    width: 100%;
+    text-align: center; /* Căn giữa h1 bên trong */
+}
+
+
+/* Tiêu đề h1 */
 #main-header h1 {
     color: var(--primary-color);
     margin: 0;
     font-size: 2.5em;
-    flex-grow: 1; /* Cho phép h1 chiếm không gian còn lại */
-    text-align: center; /* Đảm bảo tiêu đề luôn ở giữa */
+    display: inline-block; /* Bỏ các thuộc tính flex cũ */
 }
 
+/* Logo và tên CLB */
 .logo-container {
     display: flex;
     align-items: center;
-    position: absolute; /* Đặt logo ở góc trái */
-    left: 20px;
+    position: absolute; /* Đặt logo ở góc trái của trang */
+    left: 20px; /* Khoảng cách với lề trái */
 }
 
 .club-logo {
-    height: 65px; /* Kích thước logo */
+    height: 65px;
     margin-right: 10px;
 }
 
@@ -58,19 +67,67 @@ body {
     font-size: 1.0em;
     font-weight: bold;
     color: var(--primary-color);
-    white-space: nowrap; /* Giữ tên CLB trên một dòng */
+    line-height: 1.2;
 }
 
+/*
+=================================
+Bố cục chính
+=================================
+*/
 
-/* Container chính cho game */
+/* Container chính cho toàn bộ khu vực game */
 #game-container {
-    display: flex;
-    gap: 30px;
-    align-items: flex-start;
+    width: 1060px; /* Chiều rộng cố định để ổn định bố cục */
+    display: grid;
+    /* Cột trái/phải 200px, cột giữa chiếm phần còn lại (600px) */
+    grid-template-columns: 200px 1fr 200px;
+    gap: 30px; /* Khoảng cách 30px giữa các cột */
+    align-items: start; /* Căn các cột ở trên cùng, chiều cao tự động */
 }
 
-/* Khu vực điều khiển bên trái */
-#controls {
+/* Cột giữa chứa canvas và mô tả */
+.center-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Căn canvas và mô tả ra giữa cột của nó */
+}
+
+/* Khu vực chứa canvas game */
+#canvas-container {
+    border: 3px solid var(--primary-color);
+    border-radius: 5px;
+    box-shadow: 0 4px 15px rgba(0, 168, 230, 0.4);
+    line-height: 0; /* Fix khoảng trắng thừa */
+}
+
+/* Khu vực chứa mô tả ảnh */
+#description-container {
+    width: 100%; /* Rộng bằng 100% cột giữa */
+    max-width: 600px; /* Rộng tối đa bằng canvas */
+    margin-top: 10px; /* Khoảng cách với canvas */
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#image-description {
+    text-align: center;
+    color: var(--primary-color);
+    font-size: 1.2em;
+    font-style: italic;
+    font-weight: bold;
+    min-height: 1.5em;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+
+/*
+=================================
+Khu vực điều khiển & Luật chơi
+=================================
+*/
+#controls, #rules-panel {
     width: 200px;
     background-color: var(--secondary-color);
     padding: 20px;
@@ -79,9 +136,10 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    box-sizing: border-box; /* Thêm để padding không ảnh hưởng width */
 }
 
-#controls h2 {
+#controls h2, #rules-panel h2 {
     color: var(--primary-color);
     margin: 0;
     padding-bottom: 5px;
@@ -97,6 +155,7 @@ body {
     position: relative;
     background-color: var(--border-color);
     aspect-ratio: 1 / 1;
+    cursor: pointer;    
 }
 
 #preview-placeholder {
@@ -106,12 +165,12 @@ body {
     justify-content: center;
     align-items: center;
     font-size: 1.5em;
-    color: #4a6fa5; /* Giữ màu chữ này cho placeholder */
+    color: #4a6fa5;
 }
 
 #preview-image {
     width: 100%;
-    display: block;
+    height: auto;
     display: none;
 }
 
@@ -146,7 +205,7 @@ body {
 }
 #level-selector input {
     margin-right: 10px;
-    accent-color: var(--primary-color); /* Màu của radio button */
+    accent-color: var(--primary-color);
 }
 
 /* Nút bấm */
@@ -168,28 +227,143 @@ body {
     transform: scale(0.98);
 }
 
-/* Khu vực chứa canvas game */
-#canvas-container {
+/* Luật chơi */
+#rules-panel ul {
+    padding-left: 20px;
+    margin: 0;
+    flex-grow: 1;
+}
+
+#rules-panel li {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+
+/*
+=================================
+Footer, Modal và Responsive
+=================================
+*/
+
+#main-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--secondary-color);
+    padding: 10px 10px;
+    border-top: 2px solid var(--primary-color);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+    height: 120px; /* Thêm chiều cao cố định cho footer */
+}
+
+.qr-code-container {
+    height: 90px;
+    width: 90px;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px;
+    padding: 3px;
+    background-color: white;
+    justify-self: start;
+}
+
+.qr-code-container img {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.social-links {
+    display: flex;
+    gap: 30px;
+}
+
+.social-links a {
+    color: var(--text-color);
+    font-size: 2em;
+    transition: color 0.3s, transform 0.3s;
+    text-decoration: none;
+}
+
+.social-links a:hover {
+    color: var(--primary-color);
+    transform: scale(1.2);
+}
+
+.copyright {
+    color: var(--text-color);
+    font-size: 1em;
+    white-space: nowrap;
+    justify-self: end;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    max-width: 80%;
+    max-height: 80%;
     border: 3px solid var(--primary-color);
     border-radius: 5px;
-    box-shadow: 0 4px 15px rgba(0, 168, 230, 0.4); /* Sử dụng màu primary cho shadow */
-    line-height: 0;
+    animation-name: zoomIn;
+    animation-duration: 0.3s;
+}
+
+.modal-close-button {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.modal-close-button:hover,
+.modal-close-button:focus {
+    color: #bbb;
+    text-decoration: none;
+}
+
+@keyframes zoomIn {
+    from {transform: scale(0.5)}
+    to {transform: scale(1)}
 }
 
 /* Responsive adjustments */
-@media (max-width: 800px) {
+@media (max-width: 1100px) {
     #game-container {
+        width: 100%;
+        display: flex; /* Chuyển về flexbox cho màn hình nhỏ */
         flex-direction: column;
         align-items: center;
     }
 
     #main-header {
+        max-width: 100%;
         flex-direction: column;
         text-align: center;
     }
-
+    
     .logo-container {
-        position: static; /* Bỏ position absolute */
+        position: static;
         margin-bottom: 10px;
     }
 }

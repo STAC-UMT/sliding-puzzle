@@ -1,8 +1,10 @@
 // ===================================
 //      CÀI ĐẶT CHUNG VÀ THƯ VIỆN ẢNH
 // ===================================
-const imageFiles = ["image1.jpg", "image2.jpg", "image3.jpg"];
-let loadedImages = [];
+const imageFiles = ["image01.jpg", "image02.png", "image03.png", "image04.png", "image05.png", "image06.png", "image07.png", "image08.jpg", "image09.jpg", "image10.jpg", "image11.jpg", "image12.jpg", "image13.jpg", "image14.jpg", "image15.jpg", "image16.png", "image17.png", "image18.png", "image19.png"];
+let imageDetails = new Map();
+let descriptionDisplay;
+let loadedImages = {};
 let source;
 
 // Cấu hình game
@@ -18,6 +20,7 @@ let lastPieceImage = null;
 let startButton, timerDisplay, previewImage, levelRadios;
 let previewPlaceholder;
 let eventsAssigned = false;
+let imageModal, modalImage, closeModalButton;
 
 // Kích thước tối đa cho canvas
 const maxCanvasSize = 600;
@@ -31,9 +34,13 @@ let timerInterval;
 // ===================================
 
 function preload() {
+    // Tải ảnh vào một object
     for (let filename of imageFiles) {
-        loadedImages.push(loadImage(`images/${filename}`));
+        loadedImages[filename] = loadImage(`images/${filename}`);
     }
+
+    // Tải file details.txt và chỉ định hàm parseDetails sẽ xử lý nó SAU KHI tải xong
+    loadStrings('images/details.txt', parseDetails);
 }
 
 function setup() {
@@ -47,14 +54,38 @@ function setup() {
     previewImage = select('#preview-image');
     previewPlaceholder = select('#preview-placeholder');
     levelRadios = selectAll('input[name="level"]');
+    descriptionDisplay = select('#image-description');
 
-    // Gán sự kiện cho nút bấm và lựa chọn level
-    // startButton.elt.addEventListener('click', startGame);
+    // Kết nối tới các element của modal
+    imageModal = select('#image-modal');
+    modalImage = select('.modal-content');
+    closeModalButton = select('.modal-close-button');
+
+    // Gán sự kiện cho ảnh preview
+    // Thay vì dùng .parent(), chúng ta sẽ select trực tiếp container
+    const previewContainer = select('#preview-container');
+    if (previewContainer) { // Kiểm tra xem có tồn tại không để tránh lỗi
+        previewContainer.elt.addEventListener('click', openImageModal);
+    }
+
+    // Gán sự kiện click để đóng modal
+    if (imageModal) {
+        imageModal.elt.addEventListener('click', (event) => {
+            if (event.target === imageModal.elt) {
+                closeImageModal();
+            }
+        });
+    }
+    if (closeModalButton) {
+        closeModalButton.elt.addEventListener('click', closeImageModal);
+    }
+    
+    // Gán sự kiện cho các radio button 
     for (let radio of levelRadios) {
         radio.changed(updateGridSize);
     }
 
-    // Hiển thị thông báo ban đầu
+    // Hiển thị thông báo ban đầu (sẽ xuất hiện trở lại)
     background("#16213e");
     fill(255);
     textAlign(CENTER, CENTER);
@@ -147,31 +178,35 @@ function updateGridSize() {
 
 function startGame() {
     gameWon = false;
-    
-    // Cập nhật kích thước lưới trước khi bắt đầu
     updateGridSize();
 
-    // 1. Chọn ảnh ngẫu nhiên và cập nhật preview
-    source = random(loadedImages);
+    // 1. Chọn một tên file ngẫu nhiên từ thư viện
+    const selectedFilename = random(imageFiles);
 
-    // Ẩn placeholder và hiện ảnh
-    previewPlaceholder.style('display', 'none');
+    // 2. Dùng tên file để lấy ảnh đã tải
+    source = loadedImages[selectedFilename];
+
+    // 3. Lấy mô tả tương ứng và hiển thị
+    const description = imageDetails.get(selectedFilename) || ""; // Lấy mô tả, hoặc chuỗi rỗng nếu không có
+    console.log("File được chọn ngẫu nhiên:", selectedFilename);
+    console.log("Mô tả tìm thấy:", description);
+    descriptionDisplay.html(description);
+
     previewImage.style('display', 'block');
     previewImage.attribute('src', source.canvas.toDataURL());
+    previewPlaceholder.style('display', 'none');
 
-    // 2. Thay đổi kích thước canvas
     let ar = source.width / source.height;
     let canvasW = (source.width > source.height) ? maxCanvasSize : maxCanvasSize * ar;
     let canvasH = (source.width > source.height) ? maxCanvasSize / ar : maxCanvasSize;
     resizeCanvas(canvasW, canvasH);
     source.resize(canvasW, canvasH);
 
-    // 3. Reset và chuẩn bị các ô puzzle
     tiles = [];
     board = [];
     w = width / cols;
     h = height / rows;
-    
+
     for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
             let x = i * w;
@@ -183,19 +218,17 @@ function startGame() {
             tiles.push(new Tile(index, img));
         }
     }
-    
-    const lastTile = tiles[tiles.length - 1]; // Lấy ra tile cuối cùng
+
+    const lastTile = tiles[tiles.length - 1];
     lastPieceImage = lastTile.img;
 
-    tiles.pop(); // Bỏ ô cuối
+    tiles.pop();
     board.pop();
     board.push(-1);
 
-    // 4. Xáo trộn
     simpleShuffle(board);
 
-    // 5. Bắt đầu/Reset đồng hồ
-    clearInterval(timerInterval); // Xóa đồng hồ cũ nếu có
+    clearInterval(timerInterval);
     startTime = millis();
     timerInterval = setInterval(updateTimer, 1000);
     timerDisplay.html("00:00");
@@ -224,9 +257,9 @@ function checkIfSolved() {
 }
 
 
-// Các hàm di chuyển, không thay đổi nhiều
+// Các hàm di chuyển
 function simpleShuffle(arr) {
-    // Đảm bảo puzzle có thể giải được (sẽ bỏ qua logic phức tạp này, xáo trộn ngẫu nhiên là đủ cho game)
+    // Xáo trộn ngẫu nhiên là đủ 
     for (let i = 0; i < 1000; i++) {
         randomMove(arr);
     }
@@ -253,4 +286,43 @@ function isNeighbor(i, j, x, y) {
 }
 function swap(i, j, arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]]; // Cú pháp ES6 để hoán đổi
+}
+
+// Hàm để mở khung xem ảnh
+function openImageModal() {
+    // Chỉ mở khi đã có ảnh (game đã bắt đầu)
+    if (source) {
+        const currentImageSrc = previewImage.attribute('src');
+        modalImage.attribute('src', currentImageSrc);
+        imageModal.style('display', 'flex');
+    }
+}
+
+// Hàm để đóng khung xem ảnh
+function closeImageModal() {
+    imageModal.style('display', 'none');
+}
+
+// Hàm này sẽ chỉ được gọi sau khi file details.txt đã được tải xong
+function parseDetails(lines) {
+    console.log("File details.txt đã được tải. Bắt đầu xử lý...");
+    for (let line of lines) {
+        if (line.trim() === "") continue; // Bỏ qua dòng trống
+        try {
+            // Tách dòng thành 2 phần dựa trên dấu phẩy
+            const parts = line.match(/"(.*?)"/g).map(part => part.replace(/"/g, ''));
+            if (parts.length === 2) {
+                const filename = parts[0];
+                const description = parts[1];
+                imageDetails.set(filename, description);
+            } else {
+                // Thêm cảnh báo nếu định dạng dòng bị sai
+                console.warn("Dòng này trong details.txt không đúng định dạng và sẽ được bỏ qua:", line);
+            }
+        } catch (e) {
+            console.error("Không thể xử lý dòng này:", line, e);
+        }
+    }
+    // Dòng log này giờ sẽ hiển thị đúng kết quả
+    console.log("Đã xử lý xong file details.txt:", imageDetails);
 }
