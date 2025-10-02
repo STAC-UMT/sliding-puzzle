@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sliding Puzzle Pro</title>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <header id="main-header">
+        <div class="logo-container">
+            <img src="assets/STAC.png" alt="Club Logo" class="club-logo">
+            <span class="club-name">Câu lạc bộ Học thuật <br> Khoa Công nghệ UMT</span> </div>
+        <h1>Sliding Puzzle Game</h1>
+    </header>
+
+    <div id="game-container">
+        <aside id="controls">
+            <h2>Preview</h2>
+            <div id="preview-container">
+                <div id="preview-placeholder">
+                    <p>Ready?</p>
+                </div>
+                <img id="preview-image" alt="Puzzle Preview">
+            </div>
+
+            <h2>Time</h2>
+            <p id="timer">00:00</p>
+
+            <h2>Level</h2>
+            <div id="level-selector">
+                <label><input type="radio" name="level" value="3" checked> Easy (3x3)</label>
+                <label><input type="radio" name="level" value="4"> Medium (4x4)</label>
+                <label><input type="radio" name="level" value="5"> Hard (5x5)</label>
+            </div>
+
+            <button id="startButton">New Game</button>
+        </aside>
+
+        <main id="canvas-container"></main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="tile.js"></script>
+    <script src="sketch.js"></script>
+</body>
+</html>
